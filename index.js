@@ -1,21 +1,17 @@
 const express = require("express");
+const dotenv = require("dotenv").config();
 const app = express();
 const cors = require("cors");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const shortId = require("shortid");
+const { dbConnect, User } = require("./db");
 
 
-mongoose.connect(process.env.DB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
 
-if (mongoose.connection.readyState) {
-  console.log("Connected to MongoDB");
-} else if (!mongoose.connection.readyState) {
-  console.log("Not Connected");
-}
+
+dbConnect()
+
 
 app.use(cors());
 
@@ -28,20 +24,7 @@ app.get("/", (req, res) => {
 });
 
 
-const userSchema = new mongoose.Schema({
-  _id: { type: String, required: true, default: shortId.generate },
-  username: { type: String, required: true },
-  count: { type: Number, default: 0 },
-  log: [
-    {
-      description: { type: String },
-      duration: { type: Number },
-      date: { type: Date }
-    }
-  ]
-});
 
-const User = mongoose.model("User", userSchema);
 
 
 
@@ -158,44 +141,6 @@ app.get("/api/users/:_id/logs", (req, res) => {
   });
 });
 
-app.post("/api/users/view", (req, res) => {
-  console.log(req.body);
-  User.findById(req.body._id, (error, result) => {
-    if (!error) {
-      let resObj = result;
-
-      if (req.body.from || req.body.to) {
-        let fromDate = new Date(0);
-        let toDate = new Date();
-
-        if (req.body.from) {
-          fromDate = new Date(req.body.from);
-        }
-
-        if (req.body.to) {
-          toDate = new Date(req.body.to);
-        }
-
-        fromDate = fromDate.getTime();
-        toDate = toDate.getTime();
-
-        resObj.log = resObj.log.filter(session => {
-          let sessionDate = new Date(session.date).getTime();
-
-          return sessionDate >= fromDate && sessionDate <= toDate;
-        });
-      }
-
-      if (req.body.limit) {
-        resObj.log = resObj.log.slice(0, req.body.limit);
-      }
-
-      resObj = resObj.toJSON();
-      resObj["count"] = result.log.length;
-      res.json(resObj);
-    }
-  });
-});
 
 
 const listener = app.listen(process.env.PORT || 3000, () => {
