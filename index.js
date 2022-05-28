@@ -42,7 +42,8 @@ app.post('/api/users', (req, res) => {
 
 app.post('/api/users/:_id/exercises', (req, res) => {
   const { _id, description, duration, date } = req.body;
-  const newExercise = new exerciseModel({ _id, description, duration, date });
+  if(!date){date=Date.now()}
+  const newExercise = new exerciseModel({ _id, description, duration, date});
   newExercise.save((err, data) => {
     if (err) {
       res.json({error: err});
