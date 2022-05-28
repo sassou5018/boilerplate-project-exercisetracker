@@ -21,23 +21,11 @@ app.use(bodyParser.json());
 
 app.post('/api/users', (req, res) => {
   const { username } = req.body;
-  let exists;
-  try {
-  exists = userModel.exists({ username });
-  } catch (err) {
-    console.log(err.message);
-  }
-  if (exists) {
-    res.json({ error: 'username already exists' });
-  }
-  const newUser = new userModel({ username });
-  newUser.save((err, user) => {
-    if (err) {
-      console.log(err.message);
-    }
-    res.json(user);
-  }
-  );
+  const user = new userModel({ username });
+  user.save((err, user) => {
+    if (err) return res.status(400).send(err);
+    res.send(user);
+  });
 });
 
 
@@ -120,7 +108,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
     query.limit = limit;
   }
   try {
-  logs = exerciseModel.find(query).populate('user').exec(
+    exerciseModel.find(query).populate('user').exec(
     (err, exercises) => {
       if (err) {
         console.log(err.message);
