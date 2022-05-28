@@ -107,7 +107,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
     query.date = { $lte: new Date(to) };
   }
   if (limit) {
-    query.limit = limit;
+    query.limit = +limit;
   }
   try {
     exerciseModel.find(query).populate('user').exec(
