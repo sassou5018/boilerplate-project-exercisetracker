@@ -136,7 +136,16 @@ app.get("/api/users/:_id/logs", (req, res) => {
 
       resObj = resObj.toJSON();
       resObj["count"] = result.log.length;
-      res.json(resObj);
+      res.json({
+        count: resObj.count,
+        _id: resObj._id,
+        username: resObj.username,
+        log: resObj.log.map(o => ({
+          description: o.description,
+          duration: o.duration,
+          date: o.date.toDateString()
+        }))
+      });
     }
   });
 });
