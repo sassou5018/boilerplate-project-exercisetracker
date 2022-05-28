@@ -21,90 +21,123 @@ app.use(bodyParser.json());
 
 app.post('/api/users', (req, res) => {
   const { username } = req.body;
-  const user = new userModel({ username });
-  user.save((err, user) => {
+  let exists;
+  try {
+  exists = userModel.exists({ username });
+  } catch (err) {
+    console.log(err.message);
+  }
+  if (exists) {
+    res.json({ error: 'username already exists' });
+  }
+  const newUser = new userModel({ username });
+  newUser.save((err, user) => {
     if (err) {
-      res.status(400).json({error: err.message});
-    } else {
-      res.status(201).json(user);
+      console.log(err.message);
     }
-  });
+    res.json(user);
+  }
+  );
 });
+
 
 app.get('/api/users', (req, res) => {
   userModel.find({}, (err, users) => {
     if (err) {
-      res.status(400).json({error: err.message});
-    } else {
-      res.status(200).json(users);
+      console.log(err.message);
     }
+    res.json(users);
   });
 });
+
 
 app.post('/api/users/:_id/exercises', (req, res) => {
   let { description, duration, date } = req.body;
-  if(!date){
-    date= Date.now();
-  }
   const { _id } = req.params;
-  const exercise = new exerciseModel({ description, duration, date, userId: _id });
-  let userName; 
-  userModel.findOne({_id}, (err, user) => {
-    if (err) {
-      res.status(400).json({error: err.message});
-    } else {
-      userName=user.username;
-    }
+  if(!date){
+    date = new Date();
+  }
+  let newExercise;
+  let users;
+   
+  try {
+    newExercise = new exerciseModel({
+      user: _id,
+      description,
+      duration,
+      date
     });
-  exercise.save((err, exercise) => {
-    if (err) {
-      res.status(400).json({error: err.message});
-    } else {
-      res.status(201).json({
-        username: userName,
-        description: exercise.description,
-        duration: exercise.duration,
-        date: exercise.date,
-        _id: exercise._id
+    newExercise.save((err, exercise) => {
+      if (err) {
+        console.log(err.message);
+      }
+      //console.log(exercise);
+      response = exercise;
+    });
+  } catch (err) {
+    console.log(err.message);
+  }
+  try{
+    userModel.where({ _id }).findOne().exec(
+      (err, user) => {
+        if (err) {
+          console.log(err.message);
+        }
+        users=user;
+        //console.log(users);
+        res.json({
+          username: user.username,
+          description: description,
+          duration: duration,
+          date: date,
+          _id: user._id
+        })
 
-      });
-    }
-  });
+      }
+    );
+  }
+  catch(err){
+    console.log(err.message);
+  }
+  
 });
+  
 
 
 app.get('/api/users/:_id/logs', (req, res) => {
-  const { from, to, limit } = req.query;
   const { _id } = req.params;
-  const count = exerciseModel.countDocuments({userId: _id}, (err, count) => {
-    if (err) {
-      res.status(400).json({error: err.message});
+  const { from, to, limit } = req.query;
+  let logs;
+  let user;
+  const query = { user: _id };
+  if (from) {
+    query.date = { $gte: new Date(from) };
+  }
+  if (to) {
+    query.date = { $lte: new Date(to) };
+  }
+  if (limit) {
+    query.limit = limit;
+  }
+  try {
+  logs = exerciseModel.find(query).populate('user').exec(
+    (err, exercises) => {
+      if (err) {
+        console.log(err.message);
+      }
+      res.json({
+        username: exercises[0].user.username,
+        count: exercises.length,
+        log: exercises
+      });
     }
-  });
-  const logs = exerciseModel.find({userId: _id}, (err, logs) => {
-    if (err) {
-      res.status(400).json({error: err.message});
-    }
-  });
+  );
+  } catch (err) {
+    console.log(err.message);
+  }
 
-  const usrName = userModel.findOne({_id}, (err, user) => {
-    if (err) {
-      res.status(400).json({error: err.message});
-    }
-  });
-
-  res.status(200).json({
-    username: usrName,
-    count: count,
-    _id: _id,
-    log: logs,
-  });
-
-
+  
 });
-
-
-
 
 
 

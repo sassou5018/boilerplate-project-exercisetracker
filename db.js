@@ -21,8 +21,9 @@ const userSchema = new mongoose.Schema({
 const userModel = mongoose.model('User', userSchema);
 
 const exerciseSchma = new mongoose.Schema({
-    userId: {
-        type: String,
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     },
     description: {
         type: String,
