@@ -43,7 +43,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   let { description, duration, date } = req.body;
   const { _id } = req.params;
   if(!date){
-    date = new Date().toDateString();
+    date = new Date();
   }
   let newExercise;
   let users;
@@ -75,10 +75,11 @@ app.post('/api/users/:_id/exercises', (req, res) => {
         //console.log(users);
         res.json({
           username: user.username,
+          _id: user._id,
           description: description,
           duration: duration,
-          date: date,
-          _id: user._id
+          date: date.toDateString(),
+          
         })
 
       }
