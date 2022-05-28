@@ -76,9 +76,11 @@ app.post('/api/users/:_id/exercises', (req, res) => {
         res.json({
           _id: _id,
           username: user.username,
-          description: description,
-          duration: duration,
           date: date,
+          duration: duration,
+          description: description
+          
+          
           
           
         })
@@ -116,6 +118,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
         console.log(err.message);
       }
       res.json({
+        _id: _id,
         username: exercises[0].user.username,
         count: exercises.length,
         log: exercises.map(exercise => ({
