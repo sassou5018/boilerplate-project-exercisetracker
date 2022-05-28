@@ -16,84 +16,94 @@ app.get('/', (req, res) => {
 });
 
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.post('/api/users', (req, res) => {
   const { username } = req.body;
-  userModel.find({ username }, (err, data) => {
+  const user = new userModel({ username });
+  user.save((err, user) => {
     if (err) {
-      res.json({error: err});
-    } else if (data.length > 0) {
-      res.json({error:'Username already exists'});
+      res.status(400).json({error: err.message});
     } else {
-      const newUser = new userModel({ username });
-      newUser.save((err, data) => {
-        if (err) {
-          res.json({error: err});
-        } else {
-          res.json(data);
-        }
-      });
+      res.status(201).json(user);
     }
   });
 });
-
-
-app.post('/api/users/:_id/exercises', (req, res) => {
-  const { _id, description, duration, date } = req.body;
-  if(!date){date=Date.now()}
-  const newExercise = new exerciseModel({ _id, description, duration, date});
-  newExercise.save((err, data) => {
-    if (err) {
-      res.json({error: err});
-    } else {
-      res.json({
-        username: mongoose.findOne({_id: data.userId}).username,
-        description: data.description,
-        duration: data.duration,
-        date: data.date,
-        _id: data._id
-      });
-    }
-  });
-});
-
 
 app.get('/api/users', (req, res) => {
-  userModel.find({}, (err, data) => {
+  userModel.find({}, (err, users) => {
     if (err) {
-      res.json({error: err});
+      res.status(400).json({error: err.message});
     } else {
-      res.json(data);
+      res.status(200).json(users);
+    }
+  });
+});
+
+app.post('/api/users/:_id/exercises', (req, res) => {
+  let { description, duration, date } = req.body;
+  if(!date){
+    date= Date.now();
+  }
+  const { _id } = req.params;
+  const exercise = new exerciseModel({ description, duration, date, userId: _id });
+  let userName; 
+  userModel.findOne({_id}, (err, user) => {
+    if (err) {
+      res.status(400).json({error: err.message});
+    } else {
+      userName=user.username;
+    }
+    });
+  exercise.save((err, exercise) => {
+    if (err) {
+      res.status(400).json({error: err.message});
+    } else {
+      res.status(201).json({
+        username: userName,
+        description: exercise.description,
+        duration: exercise.duration,
+        date: exercise.date,
+        _id: exercise._id
+
+      });
     }
   });
 });
 
 
 app.get('/api/users/:_id/logs', (req, res) => {
-  const { _id, from, to, limit } = req.query;
-  const query = {};
-  if (_id) {
-    query._id = _id;
-  }
-  if (from) {
-    query.date = { $gte: new Date(from) };
-  }
-  if (to) {
-    query.date = { $lte: new Date(to) };
-  }
-  if (limit) {
-    query.limit = limit;
-  }
-  exerciseModel.find(query, (err, data) => {
+  const { from, to, limit } = req.query;
+  const { _id } = req.params;
+  const count = exerciseModel.countDocuments({userId: _id}, (err, count) => {
     if (err) {
-      res.json({error: err});
-    } else {
-      res.json(data);
+      res.status(400).json({error: err.message});
     }
   });
+  const logs = exerciseModel.find({userId: _id}, (err, logs) => {
+    if (err) {
+      res.status(400).json({error: err.message});
+    }
+  });
+
+  const usrName = userModel.findOne({_id}, (err, user) => {
+    if (err) {
+      res.status(400).json({error: err.message});
+    }
+  });
+
+  res.status(200).json({
+    username: usrName,
+    count: count,
+    _id: _id,
+    log: logs,
+  });
+
+
 });
+
+
 
 
 
