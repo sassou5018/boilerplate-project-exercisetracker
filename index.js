@@ -48,7 +48,13 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     if (err) {
       res.json({error: err});
     } else {
-      res.json(data);
+      res.json({
+        username: mongoose.findOne({_id: data.userId}).username,
+        description: data.description,
+        duration: data.duration,
+        date: data.date,
+        _id: data._id
+      });
     }
   });
 });
@@ -65,7 +71,7 @@ app.get('/api/users', (req, res) => {
 });
 
 
-app.get('/api/users/:id/logs', (req, res) => {
+app.get('/api/users/:_id/logs', (req, res) => {
   const { _id, from, to, limit } = req.query;
   const query = {};
   if (_id) {
