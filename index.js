@@ -74,11 +74,12 @@ app.post('/api/users/:_id/exercises', (req, res) => {
         users=user;
         //console.log(users);
         res.json({
+          _id: _id,
           username: user.username,
           description: description,
           duration: duration,
           date: date,
-          _id: _id
+          
           
         })
 
