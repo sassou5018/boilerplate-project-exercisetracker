@@ -102,17 +102,11 @@ app.get('/api/users/:_id/logs', (req, res) => {
   let logs;
   let user;
   const query = { user: _id };
-  if (from) {
-    query.date = { $gte: new Date(from) };
-  }
-  if (to) {
-    query.date = { $lte: new Date(to) };
-  }
-  if (limit) {
-    query.limit = +limit;
-  }
+  let fromq = new Date(from);
+  let toq = new Date(to);
+  
   try {
-    exerciseModel.find(query).populate('user').exec(
+    exerciseModel.find(query).where('date').gte(fromq).lte(toq).limit(+limit).populate('user').exec(
     (err, exercises) => {
       if (err) {
         console.log(err.message);
