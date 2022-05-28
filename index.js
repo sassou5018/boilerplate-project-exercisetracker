@@ -117,7 +117,11 @@ app.get('/api/users/:_id/logs', (req, res) => {
       res.json({
         username: exercises[0].user.username,
         count: exercises.length,
-        log: exercises
+        log: exercises.map(exercise => ({
+          description: exercise.description,
+          duration: exercise.duration,
+          date: exercise.date.toDateString()
+        }))
       });
     }
   );
