@@ -78,7 +78,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
           _id: user._id,
           description: description,
           duration: duration,
-          date: date,
+          date: date.toDateString(),
           
         })
 
